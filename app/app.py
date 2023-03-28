@@ -30,7 +30,7 @@ def load_user(user_id):
 
 
 from models import Setting  # noqa
-@babel.localeselector
+
 def get_locale():
     """Get the selected locale from user settings."""
     setting = Setting.query.filter(Setting.name == 'default_language').first()
@@ -41,6 +41,7 @@ def get_locale():
     # Return default language when none found
     return 'en'
 
+babel.init_app(app, locale_selector=get_locale)
 
 @app.template_filter('slugify')
 def slug(value):
