@@ -13,7 +13,8 @@
       <div class="content">
         <a class="ui teal right ribbon label" href="{{ url_for('recipes', category=recipe.category.name) }}">{{ recipe.category.name }}</a>
         <a class="header" href="{{ recipe_url(recipe) }}" style="margin-top: -1rem; font-size: 2rem; padding-right: 3rem;">{{ recipe.name }}</a>
-        <a href="/edit" style="position: absolute; right: 0px; bottom: 0px; color: black;"><i class="pen icon"></i></a>
+        <p>Author: {{ recipe.author }}</p>
+        <a href="/edit" style="position: absolute; right: 10px; bottom: 10px; color: black;"><i class="pen icon"></i></a>
       </div>
 
       <div class="extra content meta">

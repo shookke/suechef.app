@@ -14,6 +14,11 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(128), nullable=False)
     password = db.Column(db.String(128), nullable=False)
+    
+    recipes = db.relationship('UserRecipe')
+    #menu = db.relationship('Meal')
+    
+    #settings = db.relationship('Setting')
 
     def set_password(self, password):
         """Set the password to given value"""
@@ -29,14 +34,24 @@ class Setting(db.Model):
     name = db.Column(db.String(32), nullable=False)
     value = db.Column(db.String(128), nullable=True)
 
+    #user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
     def __init__(self, name, value):
         self.name = name
         self.value = value
 
+class UserRecipe(db.Model):
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), primary_key=True)
+    
+    
 
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
+    author = db.Column(db.String(128), nullable=False)
+    source = db.Column(db.String(128))
+    source_url = db.Column(db.String(256))
 
     prep_time = db.Column(db.Integer)
     cook_time = db.Column(db.Integer)
@@ -52,6 +67,10 @@ class Recipe(db.Model):
     ingredients = db.relationship('RecipeIngredient', back_populates='recipe')
 
     tags = db.relationship('Tag', secondary=recipe_tag, back_populates='recipes')
+    
+    directions = db.Column(db.Text)
+    
+    published = db.Column(db.Boolean, default=False, nullable=False)
 
 
 class Category(db.Model):
@@ -118,9 +137,14 @@ class Meal(db.Model):
 
 class Grocery(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    #ingredient_id = db.Column()
     name = db.Column(db.String(128), nullable=True)
-    #meal_id = db.Column() # Verwijderen meal zorgt voor verwijderen boodschappen
+    
+    #meal_id = db.Column(db.Integer, db.ForeignKey('meal.id'))
+    #meal = db.relationship('Meal')
+    
+    #ingredient_id = db.Column(db.Integer, db.ForeignKey('ingredient.id'))
+    #ingredient = db.relationship('Ingredient')
+
 
 
 class Tag(db.Model):

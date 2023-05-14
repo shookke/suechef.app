@@ -79,12 +79,15 @@ def recipe_new():
     if form.validate_on_submit():
         LOGGER.debug("Validating new recipe form.")
         recipe = Recipe(
+            author = current_user.name,
             cook_time = form.cook_time.data,
             description = form.description.data,
             name = form.name.data,
             prep_time = form.prep_time.data,
             servings = form.servings.data,
             intro = form.intro.data,
+            directions = form.directions.data,
+            published = form.publish.data,
         )
         session = db.session
         session.add(recipe)
@@ -154,7 +157,12 @@ def groceries():
 def pantry():
     return render_template('pantry.html')
 
-
+@app.route('/profile')
+@login_required
+def profile():
+    user = current_user
+    return render_template('profile.html', user=user)
+    
 @app.route('/settings')
 @login_required
 def settings():

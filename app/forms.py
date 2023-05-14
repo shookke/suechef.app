@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, PasswordField, StringField, SubmitField
+from wtforms import BooleanField, IntegerField, PasswordField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange
 
 
@@ -20,6 +20,8 @@ class RecipeForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=1, max=60*24*7)])
     servings = IntegerField('Servings',
         validators=[DataRequired(), NumberRange(min=1, max=10000)])
+    directions = TextAreaField('Directions',validators=[DataRequired()])
+    publish = BooleanField('Publish')
     submit = SubmitField('Create')
 
 

@@ -50,6 +50,16 @@
         {{ form.description.label }}
         {{ form.description() }}
     </div>
+
+    <div class="field">
+        {{ form.directions.label }}
+        {{ form.directions() }}
+    </div>
+
+    <div class="field">
+        {{ form.publish.label }}
+        {{ form.publish() }}
+    </div>
     {% for error in form.description.errors %}
         <div class="ui error message"><p>{{ error }}</p></div>
     {% endfor %}
