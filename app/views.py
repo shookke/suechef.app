@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash
 from sqlalchemy.sql.expression import func
 from slugify import slugify
 from forms import LoginForm, RecipeForm, RegisterForm
-from models import User, Setting, Category, Tag, Recipe, Ingredient, \
+from models import User, Setting, Category, Tag, UserRecipe, Recipe, Ingredient, \
     RecipeIngredient, Meal
 from datetime import date, timedelta
 from collections import defaultdict
@@ -74,6 +74,7 @@ def recipes():
 @login_required
 def recipe_new():
     """Create a new recipe."""
+    user = User.query.filter_by(id=current_user.get_id()).first()
     form = RecipeForm()
     LOGGER.debug("New recipe form.")
     if form.validate_on_submit():
@@ -89,6 +90,7 @@ def recipe_new():
             directions = form.directions.data,
             published = form.publish.data,
         )
+        user.recipes.append(UserRecipe(recipe))
         session = db.session
         session.add(recipe)
         session.commit()
