@@ -43,6 +43,17 @@ class Setting(db.Model):
 class UserRecipe(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), primary_key=True)
+    notes = db.Column(db.Text)
+    rating = db.Column(db.Integer)
+    recipes = db.relationship("User", back_populates='recipes')
+    recipe = db.relationship("Recipe")
+    
+    def __init__(self, recipe, notes=None, rating=None):
+        self.recipe = recipe
+        if notes is not None:
+            self.notes = notes
+        if rating is not None:
+            self.rating = rating
     
     
 
