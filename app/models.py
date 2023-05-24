@@ -44,7 +44,8 @@ class UserRecipe(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipe.id'), primary_key=True)
     notes = db.Column(db.Text)
-    rating = db.Column(db.Integer)
+    rating = db.Column(db.Integer, default=0)
+    saved = db.Column(db.Boolean)
     recipes = db.relationship("User", back_populates='recipes')
     recipe = db.relationship("Recipe")
     
@@ -70,7 +71,9 @@ class Recipe(db.Model):
     servings = db.Column(db.Integer, nullable=False)
     intro = db.Column(db.Text)
     description = db.Column(db.Text, nullable=False)
-    rating = db.Column(db.Integer)
+    
+    rating = db.Column(db.Integer, default=0)
+    rating_count = db.Column(db.Integer, default=0)
 
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=True)
     category = db.relationship('Category', back_populates='recipes')
@@ -83,6 +86,8 @@ class Recipe(db.Model):
     
     published = db.Column(db.Boolean, default=False, nullable=False)
 
+    def calc_rating(self, rating):
+        self.rating = (self.rating + rating)/self.rating_count
 
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)

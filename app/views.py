@@ -90,7 +90,7 @@ def recipe_new():
             directions = form.directions.data,
             published = form.publish.data,
         )
-        user.recipes.append(UserRecipe(recipe))
+        user.recipes.append(UserRecipe(recipe,None, 0))
         session = db.session
         session.add(recipe)
         session.commit()
@@ -129,24 +129,55 @@ def search():
 @login_required
 def recipe(id, name=None):
     recipe = Recipe.query.get_or_404(id)
+    user_recipe = UserRecipe.query.filter_by(recipe_id=id).filter_by(author_id=current_user.get_id()).first()
     slug = slugify(recipe.name)
 
     if slug != name:
         return redirect(url_for('recipe', id=recipe.id, name=slug))
 
-    return render_template('recipe.html', recipe=recipe)
+    return render_template('recipe.html', recipe=recipe, user_recipe=user_recipe)
 
 
 @app.route('/recipes/<int:id>', methods=['PATCH'])
 @login_required
 def recipe_update(id):
+    user_recipe = UserRecipe.query.filter_by(recipe_id=id).filter_by(author_id=current_user.get_id()).first()
     recipe = Recipe.query.get_or_404(id)
-
-    recipe.rating = request.json.get('rating')
+    rating = request.json.get('rating')
+    if user_recipe:
+        if user_recipe.rating == 0:
+            recipe.rating_count += 1
+        user_recipe.rating = rating
+        recipe.rating = (recipe.rating + rating) / float(recipe.rating_count)
+    if not user_recipe:
+        user_recipe = UserRecipe(recipe)
+        user_recipe.rating = rating
+        recipe.rating_count += 1
+        recipe.calc_rating(rating)
     db.session.commit()
-
     return '', 204
 
+@app.route('/recipes/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def recipe_edit(id):
+    recipe = Recipe.query.get_or_404(id)
+    form = RecipeForm()
+    if form.validate_on_submit():
+        recipe.name = form.name.data
+        recipe.prep_time = form.prep_time.data
+        recipe.cook_time = form.cook_time.data
+        recipe.servings = form.servings.data
+        recipe.intro = form.intro.data
+        recipe.description = form.description.data
+        recipe.directions = form.directions.data
+        db.session.commit()
+        LOGGER.info("Changes to recipe %s have been", form.name.data)
+        return redirect(url_for('recipe', id=recipe.id))
+    else:
+        for error in form.errors:
+            LOGGER.debug("Error: %s", error)
+    
+    return render_template('recipe_edit.html', recipe=recipe, form=form)
 
 @app.route('/groceries')
 @login_required
@@ -299,9 +330,10 @@ def generator():
     lactose    = Tag('Lactose free')
 
     recipe1 = Recipe(
-        name='Fish curry', servings=4, prep_time=15, cook_time=30,
-        category=main, intro='A delicious but simple curry',
-        description="""Wash and cook the rice.\n\nStart with oil and fry the
+        name='Fish curry', author="SueChef", servings=4, prep_time=15, cook_time=30,
+        category=main, intro='A delicious but simple curry', description="""
+            a description.""",
+        directions="""Wash and cook the rice.\n\nStart with oil and fry the
             paste for 5 minutes. Add the fish and coconut milk. Poach fish until
             tender. Finalize with coriander.""")
 
@@ -317,49 +349,60 @@ def generator():
     recipe1.ingredients.append(RecipeIngredient(coconut, 150))
     recipe1.ingredients.append(RecipeIngredient(coriander, 20))
 
-    recipe2 = Recipe(name='Pasta something', servings=4, prep_time=20, cook_time=15, category=main,
-        intro='Quick pasta for a working day meal',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe2 = Recipe(name='Pasta something', author="SueChef", servings=4, prep_time=20, cook_time=15, category=main,
+        intro='Quick pasta for a working day meal', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe3 = Recipe(name='Weekend tajine', servings=4, prep_time=30, cook_time=60, category=main,
-        intro='Something truly the waiting for during a weekend',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe3 = Recipe(name='Weekend tajine', author="SueChef", servings=4, prep_time=30, cook_time=60, category=main,
+        intro='Something truly the waiting for during a weekend', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe4 = Recipe(name='Fish curry', servings=4, prep_time=15, cook_time=30, category=main,
-        intro='A delicious but simple curry',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe4 = Recipe(name='Fish curry', author="SueChef", servings=4, prep_time=15, cook_time=30, category=main,
+        intro='A delicious but simple curry', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe5 = Recipe(name='Pasta something', servings=4, prep_time=20, cook_time=15, category=main,
-        intro='Quick pasta for a working day meal',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe5 = Recipe(name='Pasta something', author="SueChef", servings=4, prep_time=20, cook_time=15, category=main,
+        intro='Quick pasta for a working day meal', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe6 = Recipe(name='Weekend tajine', servings=4, prep_time=30, cook_time=60, category=main,
-        intro='Something truly the waiting for during a weekend',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe6 = Recipe(name='Weekend tajine', author="SueChef", servings=4, prep_time=30, cook_time=60, category=main,
+        intro='Something truly the waiting for during a weekend', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe7 = Recipe(name='Fish curry', servings=4, prep_time=15, cook_time=30, category=main,
-        intro='A delicious but simple curry',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe7 = Recipe(name='Fish curry', author="SueChef", servings=4, prep_time=15, cook_time=30, category=main,
+        intro='A delicious but simple curry', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe8 = Recipe(name='Pasta something', servings=4, prep_time=20, cook_time=15, category=main,
-        intro='Quick pasta for a working day meal',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe8 = Recipe(name='Pasta something', author="SueChef", servings=4, prep_time=20, cook_time=15, category=main,
+        intro='Quick pasta for a working day meal', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe9 = Recipe(name='Weekend tajine', servings=4, prep_time=30, cook_time=60, category=main,
-        intro='Something truly the waiting for during a weekend',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe9 = Recipe(name='Weekend tajine', author="SueChef", servings=4, prep_time=30, cook_time=60, category=main,
+        intro='Something truly the waiting for during a weekend', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe10 = Recipe(name='Fish curry', servings=4, prep_time=15, cook_time=30, category=main,
-        intro='A delicious but simple curry',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe10 = Recipe(name='Fish curry', author="SueChef", servings=4, prep_time=15, cook_time=30, category=main,
+        intro='A delicious but simple curry', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
-    recipe11 = Recipe(name='Zaalouk', servings=4, prep_time=15, cook_time=0, category=side_dish,
-        intro='Moroccan Vegetable side dish',
-        description="Cut the eggplants to cubes, if you like you can peel the eggplant not completely you leave some skin on them for the dark look.\n\nCut the tomato to fine slices")
+    recipe11 = Recipe(name='Zaalouk', author="SueChef", servings=4, prep_time=15, cook_time=0, category=side_dish,
+        intro='Moroccan Vegetable side dish', description="""
+            a description.""",
+        directions="Cut the eggplants to cubes, if you like you can peel the eggplant not completely you leave some skin on them for the dark look.\n\nCut the tomato to fine slices")
 
-    recipe12 = Recipe(name='A very long title with multiple words', servings=4, prep_time=30, cook_time=60, category=main,
-        intro='Something truly the waiting for during a weekend',
-        description="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
+    recipe12 = Recipe(name='A very long title with multiple words', author="SueChef", servings=4, prep_time=30, cook_time=60, category=main,
+        intro='Something truly the waiting for during a weekend', description="""
+            a description.""",
+        directions="Start with bla bla and then\nDo some more steps\n\nEnjoy!")
 
     session = db.session
     session.add(grocery_day)

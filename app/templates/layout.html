@@ -9,7 +9,7 @@
 <!doctype html>
 <html>
 <head>
-  <title>{% if title %}{{ title }} - {% endif %}groceri.es</title>
+  <title>{% if title %}{{ title }} - {% endif %}SueChef</title>
   <link rel="shortcut icon" href="/static/favicon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.8.4/semantic.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.min.css">
@@ -47,7 +47,7 @@
   <div class="sidebar"><nav class="ui left vertical inverted visible sidebar menu">
     <a href="/" class="item ui logo icon image{% if active_page == 'home' %} active{% endif %}">
       <!-- <img src="/static/logos/logo_transparent_notext.png" style="max-width: 3rem; height: auto; margin-right: 1rem;"> -->
-      <i class="leaf icon"></i><b>groceri.es</b>
+      <i class="leaf icon"></i><b>SueChef</b>
     </a>
     {% for href, id, caption in navigation_bar %}
       <a href="{{ href }}" class="{% if id == active_page %}active{% endif %} item"><b>{{ caption }}</b></a>

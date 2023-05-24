@@ -22,7 +22,7 @@ class RecipeForm(FlaskForm):
         validators=[DataRequired(), NumberRange(min=1, max=10000)])
     directions = TextAreaField('Directions',validators=[DataRequired()])
     publish = BooleanField('Publish')
-    submit = SubmitField('Create')
+    submit = SubmitField('Save')
 
 
 class RegisterForm(FlaskForm):

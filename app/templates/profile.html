@@ -1,7 +1,13 @@
 {% extends 'layout.html' %}
+{% from 'macros.html' import recipe_card with context %}
 {% set active_page = 'profile' %}
 
 {% block content %}
 <h1>{{ _('Profile') }} : {{ user.name }}</h1>
+{% for recipe in user.recipes %}
+  <div class="four wide column">
+    {{ recipe_card(recipe.recipe) }}
+  </div>
+  {% endfor %}
 
 {% endblock %}

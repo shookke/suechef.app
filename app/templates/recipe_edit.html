@@ -1,0 +1,74 @@
+{% extends 'layout.html' %}
+{% set title = _('Edit Recipe') %}
+
+{% block content %}
+<h1>{{ _('Edit Recipe') }}</h1>
+<form method="post" novalidate class="ui form{% if form.errors%} error{% endif %}">
+    {{ form.hidden_tag() }}
+
+    <div class="field">
+        {{ form.name.label }}
+        {{ form.name(size=128, value=recipe.name) }}
+    </div>
+    {% for error in form.name.errors %}
+        <div class="ui error message"><p>{{ error }}</p></div>
+    {% endfor %}
+
+    <div class="field">
+        {{ form.intro.label }}
+        {{ form.intro(size=512, value=recipe.intro) }}
+    </div>
+    {% for error in form.intro.errors %}
+        <div class="ui error message"><p>{{ error }}</p></div>
+    {% endfor %}
+
+    <div class="field">
+        {{ form.prep_time.label }}
+        {{ form.prep_time(value=recipe.prep_time) }}
+    </div>
+    {% for error in form.prep_time.errors %}
+        <div class="ui error message"><p>{{ error }}</p></div>
+    {% endfor %}
+
+    <div class="field">
+        {{ form.cook_time.label }}
+        {{ form.cook_time(value=recipe.cook_time) }}
+    </div>
+    {% for error in form.cook_time.errors %}
+        <div class="ui error message"><p>{{ error }}</p></div>
+    {% endfor %}
+
+    <div class="field">
+        {{ form.servings.label }}
+        {{ form.servings(value=recipe.servings) }}
+    </div>
+    {% for error in form.servings.errors %}
+        <div class="ui error message"><p>{{ error }}</p></div>
+    {% endfor %}
+
+    <div class="field">
+        {{ form.description.label }}
+        {{ form.description(value=recipe.description) }}
+    </div>
+
+    <div class="field">
+        {{ form.directions.label }}
+        <!--{{ form.directions(value=recipe.directions) }}-->
+        <textarea id="directions" name="directions" required>{{recipe.directions}}</textarea>
+    </div>
+
+    <div class="field">
+        {{ form.publish.label }}
+        {% if recipe.published %}
+            <input id="publish" name="publish" type="checkbox" checked>
+        {% else %}
+            {{ form.publish() }}
+        {% endif %}
+    </div>
+    {% for error in form.description.errors %}
+        <div class="ui error message"><p>{{ error }}</p></div>
+    {% endfor %}
+    <div class="field">{{ form.submit(class="ui button") }}</div>
+</form>
+
+{% endblock %}
