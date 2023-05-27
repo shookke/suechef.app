@@ -1,9 +1,10 @@
 import logging
-
+import os
 from app import app, db
 from flask import request, jsonify, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
 from sqlalchemy.sql.expression import func
 from slugify import slugify
 from forms import LoginForm, RecipeForm, RegisterForm
@@ -13,6 +14,9 @@ from datetime import date, timedelta
 from collections import defaultdict
 
 LOGGER = logging.getLogger(__name__)
+
+MEDIA_PATH = os.path.join(os.path.dirname(app.instance_path), app.config['UPLOAD_FOLDER'])
+
 SETTING_DEFAULTS = {
     "allow_user_registration" :  True,
     "default_servings"        :  2,
@@ -77,7 +81,7 @@ def recipe_new():
     user = User.query.filter_by(id=current_user.get_id()).first()
     form = RecipeForm()
     LOGGER.debug("New recipe form.")
-    if form.validate_on_submit():
+    if form.validate_on_submit():            
         LOGGER.debug("Validating new recipe form.")
         recipe = Recipe(
             author = current_user.name,
@@ -93,6 +97,15 @@ def recipe_new():
         user.recipes.append(UserRecipe(recipe,None, 0))
         session = db.session
         session.add(recipe)
+        session.commit()
+        file = form.img.data
+        if file:
+            filename = file.filename.split('.')
+            filename = str(recipe.id) + "." + filename[1]
+            file.save(os.path.join(MEDIA_PATH, filename))
+            recipe.img = filename
+        else:
+            recipe.img = 'default.jpg'
         session.commit()
         LOGGER.info("Created recipe %s", form.name.data)
         return redirect(url_for('recipe', id=recipe.id))
@@ -163,6 +176,12 @@ def recipe_edit(id):
     recipe = Recipe.query.get_or_404(id)
     form = RecipeForm()
     if form.validate_on_submit():
+        file = form.img.data
+        if file:
+            filename = file.filename.split('.')
+            filename = str(recipe.id) + "." + filename[1]
+            file.save(os.path.join(MEDIA_PATH, filename))
+            recipe.img = filename
         recipe.name = form.name.data
         recipe.prep_time = form.prep_time.data
         recipe.cook_time = form.cook_time.data
@@ -439,6 +458,19 @@ def generator():
     recipe1.tags.append(lactose)
 
     recipe11.tags.append(moroccan)
+    
+    recipe1.img = 'default.jpg'
+    recipe2.img = 'default.jpg'
+    recipe3.img = 'default.jpg'
+    recipe4.img = 'default.jpg'
+    recipe5.img = 'default.jpg'
+    recipe6.img = 'default.jpg'
+    recipe7.img = 'default.jpg'
+    recipe8.img = 'default.jpg'
+    recipe9.img = 'default.jpg'
+    recipe10.img = 'default.jpg'
+    recipe11.img = 'default.jpg'
+    recipe12.img = 'default.jpg'
 
     session.commit()
 

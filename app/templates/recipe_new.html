@@ -3,7 +3,7 @@
 
 {% block content %}
 <h1>{{ _('New Recipe') }}</h1>
-<form method="post" novalidate class="ui form{% if form.errors%} error{% endif %}">
+<form method="post" enctype=multipart/form-data novalidate class="ui form{% if form.errors%} error{% endif %}">
     {{ form.hidden_tag() }}
 
     <div class="field">
@@ -13,6 +13,11 @@
     {% for error in form.name.errors %}
         <div class="ui error message"><p>{{ error }}</p></div>
     {% endfor %}
+
+    <div class="field">
+        {{ form.img.label }}
+        {{ form.img()}}
+    </div>
 
     <div class="field">
         {{ form.intro.label }}

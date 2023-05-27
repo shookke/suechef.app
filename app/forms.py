@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, IntegerField, PasswordField, StringField, SubmitField, TextAreaField
+from flask_wtf.file import FileAllowed
+from wtforms import BooleanField, IntegerField, FileField, PasswordField, StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange
 
 
@@ -11,6 +12,8 @@ class LoginForm(FlaskForm):
 
 
 class RecipeForm(FlaskForm):
+    img = FileField('Image',
+        validators=[FileAllowed(['jpg', 'jpeg', 'gif', 'png', 'bmp'], 'Image files (jpg, jpeg, gif, png, bmp) only!')])
     cook_time = IntegerField('Cook Time',
         validators=[DataRequired(), NumberRange(min=1, max=60*24*7)])
     description = StringField('Description', validators=[DataRequired()])

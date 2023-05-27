@@ -62,6 +62,7 @@ class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     author = db.Column(db.String(128), nullable=False)
+    img = db.Column(db.String(256))
     source = db.Column(db.String(128))
     source_url = db.Column(db.String(256))
 

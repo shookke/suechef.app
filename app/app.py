@@ -1,5 +1,5 @@
 import logging
-
+import pycountry
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -7,11 +7,10 @@ from flask_login import LoginManager
 from flask_babel import Babel, format_date
 from config import Config
 from slugify import slugify
-import pycountry
 
 logging.basicConfig(level=logging.DEBUG)
 
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config = True)
 app.config.from_object(Config())
 
 db = SQLAlchemy(app)

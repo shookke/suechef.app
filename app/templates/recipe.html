@@ -8,7 +8,7 @@
   <div class="six wide column cards">
     <div class="ui fluid card">
       <a class="image" href="{{ recipe_url(recipe) }}">
-        <img src="/static/food/example-{{ recipe.id }}.jpg">
+        <img src="/static/food/{{ recipe.img }}">
       </a>
       <div class="content">
         <a class="ui teal right ribbon label" href="{{ url_for('recipes', category=recipe.category.name) }}">{{ recipe.category.name }}</a>
