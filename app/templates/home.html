@@ -28,7 +28,7 @@
     <tr>
       <td class="center aligned one wide">
         {% if meal.recipe %}<a href="{{ recipe_url(meal.recipe) }}" style="display: block; height: 100%;">{% endif %}
-        <img class="ui mini avatar image" src="{% if meal.recipe %}/static/food/example-{{ meal.recipe.id }}.jpg{% endif %}">
+        <img class="ui mini avatar image" src="{% if meal.recipe %}/static/food/{{ meal.recipe.img }}{% endif %}">
         {% if meal.recipe %}</a>{% endif %}{# Closing <a> for <td> block #}
       </td>
       <td>

@@ -44,6 +44,7 @@ class Profile extends Entity {
     _username = null;
     _email = null;
     _password = null;
+    _settings = [];
 
     set username(value) {
         this._username = value
@@ -57,11 +58,16 @@ class Profile extends Entity {
         this._password = value
     }
 
+    set settings(list) {
+        this._settings = list
+    }
+
     update() {
         super.update({
             name: this._name,
             email: this._email,
-            password: this._password
+            password: this._password,
+            settings: this._settings
         })
     }
 }

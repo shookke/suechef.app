@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed
-from wtforms import BooleanField, IntegerField, FileField, PasswordField, StringField, SubmitField, TextAreaField
+from wtforms import BooleanField, IntegerField, FileField, PasswordField, StringField, SelectField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange
 
 
@@ -19,6 +19,7 @@ class RecipeForm(FlaskForm):
     description = StringField('Description', validators=[DataRequired()])
     intro = StringField('Intro', validators=[DataRequired()])
     name = StringField('Name', validators=[DataRequired()])
+    category = SelectField('Category', coerce=int)
     prep_time = IntegerField('Prep Time',
         validators=[DataRequired(), NumberRange(min=1, max=60*24*7)])
     servings = IntegerField('Servings',

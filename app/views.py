@@ -4,7 +4,6 @@ from app import app, db
 from flask import request, jsonify, render_template, redirect, url_for, flash
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash
-from werkzeug.utils import secure_filename
 from sqlalchemy.sql.expression import func
 from slugify import slugify
 from forms import LoginForm, RecipeForm, RegisterForm
@@ -19,7 +18,9 @@ MEDIA_PATH = os.path.join(os.path.dirname(app.instance_path), app.config['UPLOAD
 
 SETTING_DEFAULTS = {
     "allow_user_registration" :  True,
+    "default_category"        :  ["main"],
     "default_servings"        :  2,
+    "default_duration"        :  ["0-15"],
     "default_language"        :  "en-us",
     "grocery_day"             :  "sat",
 }
@@ -74,12 +75,14 @@ def recipes():
                            recipes=recipes, categories=categories, tags=tags,
                            filter=filter, day=day)
 
+
 @app.route('/recipes/new', methods=["GET", "POST"])
 @login_required
 def recipe_new():
     """Create a new recipe."""
     user = User.query.filter_by(id=current_user.get_id()).first()
     form = RecipeForm()
+    form.category.choices = [(cat.id, cat.name) for cat in Category.query.order_by('name')]
     LOGGER.debug("New recipe form.")
     if form.validate_on_submit():            
         LOGGER.debug("Validating new recipe form.")
@@ -94,6 +97,7 @@ def recipe_new():
             directions = form.directions.data,
             published = form.publish.data,
         )
+        recipe.category = Category.query.filter_by(id=form.category.data).first()
         user.recipes.append(UserRecipe(recipe,None, 0))
         session = db.session
         session.add(recipe)
@@ -130,7 +134,7 @@ def search():
             result['results'].append({
                 'title': recipe.name,
                 'description': recipe.intro,
-                'image': '/static/food/example-{}.jpg'.format(recipe.id),
+                'image': '/static/food/{}'.format(recipe.img),
                 'link': url_for('recipe', id=recipe.id, name=slugify(recipe.name))
             })
 
@@ -175,6 +179,7 @@ def recipe_update(id):
 def recipe_edit(id):
     recipe = Recipe.query.get_or_404(id)
     form = RecipeForm()
+    form.category.choices = [(cat.id, cat.name) for cat in Category.query.order_by('name')]
     if form.validate_on_submit():
         file = form.img.data
         if file:
@@ -189,14 +194,18 @@ def recipe_edit(id):
         recipe.intro = form.intro.data
         recipe.description = form.description.data
         recipe.directions = form.directions.data
+        recipe.published = form.publish.data
+        
+        recipe.category = Category.query.filter_by(id=form.category.data).first()
         db.session.commit()
-        LOGGER.info("Changes to recipe %s have been", form.name.data)
+        LOGGER.info("Changes to recipe %s have been saved", form.name.data)
         return redirect(url_for('recipe', id=recipe.id))
     else:
         for error in form.errors:
             LOGGER.debug("Error: %s", error)
     
     return render_template('recipe_edit.html', recipe=recipe, form=form)
+
 
 @app.route('/groceries')
 @login_required
@@ -209,10 +218,44 @@ def groceries():
 def pantry():
     return render_template('pantry.html')
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'PATCH'])
 @login_required
 def profile():
     user = current_user
+    if request.method == 'PATCH':
+        if request.json.get('name'):
+            user.name = request.json.get('name')
+        if request.json.get('password'):
+            user.set_password(request.json.get('password'))
+        if request.json.get('email'):
+            user.email = request.json.get('email')
+        settings = request.json.get('settings')
+        LOGGER.debug("These are the recieved settings: %s", settings)
+        if settings:
+            user.settings = []
+            for setting in settings:
+                LOGGER.debug("The individual setting: %s", setting)
+                try:
+                    k = str(next(iter(setting)))
+                    LOGGER.debug("Name: %s", k)
+                    v = setting[k]
+                    LOGGER.debug("Value: %s", v)
+                    if v:
+                        setting = Setting.query.filter_by(name=k).filter_by(value=v).first()
+                        if setting is None:
+                            setting = Setting(k, v)
+                        LOGGER.debug("Setting Object: %s", setting)
+                    else:
+                        LOGGER.debug("Skipping due to no value")
+                        continue
+                except:
+                    LOGGER.error("Setting query hit an exception!")
+                try:
+                    user.settings.append(setting)
+                except:
+                    LOGGER.error("Could not append to user settings")
+        db.session.commit()
+        return 'Settings saved', 204
     return render_template('profile.html', user=user)
     
 @app.route('/settings')
@@ -228,12 +271,23 @@ def settings():
     }
 
     # Query all settings and create a dict with the setting's name as key
-    settings = Setting.query.all()
-    settings = dict([(s.name, s) for s in settings])
+    settings = dict()
+    for s in user.settings:
+        name = s.name
+        if s.name in settings.keys():
+            if not isinstance(settings[name], str):
+                settings[name].append(s.value)
+            else:
+                settings[name] = [settings[name], s.value]
+            LOGGER.debug("Setting list: %s", settings[name])
+        else:
+            settings[name] = s.value
 
     settings['available_languages'] = app.config['LANGUAGES']
     for k, v in SETTING_DEFAULTS.items():
-        settings[k] = settings.get(k, v)
+        if k in settings:
+            continue
+        settings[k] = v
 
     return render_template('settings.html',
                            user=user, count=count, settings=settings)

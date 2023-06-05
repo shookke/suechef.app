@@ -8,6 +8,12 @@ recipe_tag = db.Table(
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
 )
 
+user_setting = db.Table(
+    'user_setting',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('setting_id', db.Integer, db.ForeignKey('setting.id'), primary_key=True)
+)
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -18,7 +24,7 @@ class User(UserMixin, db.Model):
     recipes = db.relationship('UserRecipe')
     #menu = db.relationship('Meal')
     
-    #settings = db.relationship('Setting')
+    settings = db.relationship('Setting', secondary=user_setting, back_populates='users')
 
     def set_password(self, password):
         """Set the password to given value"""
@@ -34,7 +40,7 @@ class Setting(db.Model):
     name = db.Column(db.String(32), nullable=False)
     value = db.Column(db.String(128), nullable=True)
 
-    #user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    users = db.relationship("User", secondary=user_setting, back_populates='settings')
     
     def __init__(self, name, value):
         self.name = name

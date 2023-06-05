@@ -15,6 +15,11 @@
     {% endfor %}
 
     <div class="field">
+        {{ form.category.label }}
+        {{ form.category() }}
+    </div>
+
+    <div class="field">
         {{ form.img.label }}
         {{ form.img()}}
     </div>

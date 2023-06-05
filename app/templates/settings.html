@@ -86,9 +86,9 @@
 
         <form class="ui form" id="settings-form">
           <div class="field">
-            <label>{{ _('Grocery day') }} ({{ settings.grocery_day.value }})</label>
-            <select class="ui fluid dropdown">
-                <option value="sat" selected="selected">{{ _('Saturday') }}</option>
+            <label>{{ _('Grocery day') }}</label>
+            <select class="ui fluid selection dropdown" id="grocery_day" name="grocery_day">
+                <option value="sat">{{ _('Saturday') }}</option>
                 <option value="sun">{{ _('Sunday') }}</option>
                 <option value="mon">{{ _('Monday') }}</option>
                 <option value="tue">{{ _('Tuesday') }}</option>
@@ -99,29 +99,29 @@
           </div>
 
           <div class="field">
-            <label>{{ _('Default servings') }} ({{ settings.default_servings.value }})</label>
-            <div class="ui labeled ticked slider"></div>
+            <label>{{ _('Default servings') }}</label>
+            <div class="ui labeled ticked slider" name="default_servings"></div>
           </div>
 
           <div class="field">
-            <label>{{ _('Default category listing') }} ()</label>
-            <select multiple="" class="ui dropdown courses">
+            <label>{{ _('Default category listing') }}</label>
+            <select multiple="" class="ui dropdown courses" id="default_category" name="default_category">
               <option value="">Select course</option>
               <option value="amuse">Amuse</option>
               <option value="starter">Starter</option>
-              <option value="main" selected>Main</option>
+              <option value="main">Main</option>
               <option value="side-dish">Side dish</option>
               <option value="desert">Desert</option>
             </select>
           </div>
 
           <div class="field">
-            <label>{{ _('Default duration listing') }} ()</label>
-            <select multiple="" class="ui dropdown">
+            <label>{{ _('Default duration listing') }}</label>
+            <select multiple="" class="ui dropdown" id="default_duration" name="default_duration">
               <option value="">Select duration</option>
-              <option value="0-15" selected>0-15 minutes</option>
-              <option value="15-30" selected>15-30 minutes</option>
-              <option value="30-60" selected>30-60 minutes</option>
+              <option value="0-15">0-15 minutes</option>
+              <option value="15-30">15-30 minutes</option>
+              <option value="30-60">30-60 minutes</option>
               <option value="60-120">60-120 minutes</option>
               <option value="120+">120+ minutes</option>
             </select>
@@ -129,11 +129,11 @@
 
           <div class="field">
             <label>{{ _('Application language') }}</label>
-            <select class="ui dropdown">
+            <select class="ui dropdown" id="language" name="language">
               <option value="">{{ _('Select language') }}</option>
               {% for language in settings.available_languages %}
                 {% set language_name = language | language_name %}
-                <option value="{{ language }}"{% if settings.default_language.value == language %} selected{% endif %}>
+                <option value="{{ language }}">
                   {{ language_name.name }}
                 </option>
               {% endfor %}
@@ -143,12 +143,12 @@
           <div class="inline field">
             <div class="ui toggle checkbox">
               <input type="checkbox" tabindex="0" class="hidden">
-              <label>{{ _('Allow user registration') }} ({{ settings.allow_user_registration.value }})</label>
+              <label>{{ _('Allow user registration') }}</label>
             </div>
           </div>
           
           <button class="ui button" type="submit">{{ _('Save settings') }}</button>
-        </form>
+        </form> 
 
     </div>
 
@@ -170,9 +170,30 @@
 
 <script>
 $(document).ready(function(){
-    $('.dropdown').dropdown();
-    $('.slider').slider({min:1, max:10, start: 2});
+    let servings = {{settings['default_servings']}};
+    let durations = []
+    {% if settings['default_duration'] is not string %}
+      {% for item in settings['default_duration'] %} 
+        durations.push("{{item}}")
+      {% endfor %}
+    {% else %}
+      durations.push("{{settings['default_duration']}}")
+    {% endif %}
+    let categories = []
+    {% if settings['default_category'] is not string %}
+      {% for item in settings['default_category'] %} 
+        categories.push("{{item}}")
+      {% endfor %}
+    {% else %}
+      categories.push("{{settings['default_category']}}")
+    {% endif %}
+    $('.dropdown#grocery_day').dropdown('set selected', '{{settings['grocery_day']}}');
+    $('.dropdown#default_category').dropdown('set selected', categories);
+    $('.dropdown#default_duration').dropdown('set selected', durations);
+    $('.dropdown#language').dropdown('set selected', "{{settings['default_language']}}");
+    $('.slider').slider({min:1, max:10, start:servings});
     $('.ui.checkbox').checkbox();
+    
 });
 </script>
 
@@ -180,15 +201,35 @@ $(document).ready(function(){
 import {Profile} from '/static/scripts/index.js';
 
 function profile() {
-  let form = document.getElementById('profile-form')
-  form.addEventListener('submit', function(event) {
-    let uri = '{{ url_for('profile') }}'
-    let profile = new Profile(uri)
-
+  let profileForm = document.getElementById('profile-form')
+  let settingsForm = document.getElementById('settings-form')
+  let uri = '{{ url_for('profile') }}'
+  let profile = new Profile(uri)
+  profileForm.addEventListener('submit', function(event) {
     profile.name = this.elements.name.value
     profile.email = this.elements.email.value
     profile.password = this.elements.password.value
-    // Now returns HTTP 500 due to server view not ready
+    profile.update()
+  
+    event.preventDefault()
+  })
+  settingsForm.addEventListener('submit', function(event) {
+    let settings = []
+    let values = $('#default_duration').val() || [];
+    console.log(values);
+    for (let item in values) {
+      settings.push({"default_duration": values[item]});
+    }
+    values = $('#default_category').val() || [];
+    for (let item in values) {
+      settings.push({"default_category": values[item]});
+    }
+    let servings = $('.slider').slider('get value');
+    settings.push({"grocery_day": this.elements.grocery_day.value})
+    settings.push({"default_servings": servings})
+    settings.push({"default_language": this.elements.language.value})
+    console.log(settings);
+    profile.settings = settings
     profile.update()
 
     event.preventDefault()
